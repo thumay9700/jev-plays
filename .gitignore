@@ -1,0 +1,34 @@
+# Environments & Dependencies
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Game ROMs & Emulation Save States (Never commit copyright ROMs)
+*.gb
+*.gbc
+*.gba
+*.sav
+*.ram
+*.state
+
+# Video recordings and telemetry logs
+recordings/
+telemetry_logs/
+*.mp4
+*.mkv
+*.webm
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets
+.env
+.env.local
