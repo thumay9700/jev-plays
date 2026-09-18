@@ -108,30 +108,56 @@ class JevDecisionClient:
         model: Optional[str] = None,
         telemetry: Optional[TelemetryTracker] = None,
         mock_mode: bool = False,
+        backend: Optional[str] = None,
+        llm_api_base: Optional[str] = None,
+        llm_api_key: Optional[str] = None,
+        llm_model: Optional[str] = None,
     ):
         self.api_key = api_key or os.environ.get("TYPESAFE_API_KEY")
-        self.mock_mode = mock_mode or not bool(self.api_key)
         self.telemetry = telemetry or TelemetryTracker()
         self.mock_engine = MockSystemOneEngine()
 
-        if self.mock_mode:
-            logger.info("JevDecisionClient running in MOCK mode (no API key or mock explicitly requested).")
-            self.client = None
+        # Determine backend
+        if mock_mode:
+            self.backend = "mock"
+        elif backend:
+            self.backend = backend.lower()
+        elif self.api_key:
+            self.backend = "jev"
         else:
+            self.backend = "litellm"
+
+        self.client = None
+        self.llm_adapter = None
+
+        if self.backend == "jev":
             logger.info("Initializing live TypeSafeClient with Jev System One model.")
             self.client = TypeSafeClient(api_key=self.api_key, model=model)
+        elif self.backend == "litellm":
+            from .adapters.llm_adapter import SystemOneLLMAdapter
+            logger.info("Initializing SystemOneLLMAdapter (local LiteLLM / surrogate model mode).")
+            self.llm_adapter = SystemOneLLMAdapter(
+                api_base=llm_api_base,
+                api_key=llm_api_key,
+                model=llm_model,
+            )
+        else:
+            logger.info("JevDecisionClient running in MOCK mode.")
+            self.backend = "mock"
 
     def decide(
         self, state: Dict[str, Any], questions: Dict[str, Any]
     ) -> SystemOneResponse:
         start_time = time.perf_counter()
 
-        if self.mock_mode or not self.client:
+        if self.backend == "jev" and self.client:
+            resp = self.client.system_one(state=state, questions=questions)
+        elif self.backend == "litellm" and self.llm_adapter:
+            resp = self.llm_adapter.decide(state=state, questions=questions)
+        else:
             # Simulate real network latency (50-100ms)
             time.sleep(random.uniform(0.04, 0.08))
             resp = self.mock_engine.decide(state=state, questions=questions)
-        else:
-            resp = self.client.system_one(state=state, questions=questions)
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 

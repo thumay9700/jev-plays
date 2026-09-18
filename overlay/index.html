@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jev System One - HUD Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: transparent;
+      color: #e0f2fe;
+      font-family: 'JetBrains Mono', monospace;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 24px;
+    }
+
+    .hud-card {
+      width: 380px;
+      background: rgba(11, 15, 25, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(56, 189, 248, 0.05);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .hud-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+
+    .model-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #f8fafc;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .metric-unit {
+      font-size: 11px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .latency-good { color: #34d399; }
+    .latency-med { color: #fbbf24; }
+    .latency-high { color: #f87171; }
+
+    .decision-section {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .move-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .move-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .confidence-pct {
+      font-size: 12px;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    .confidence-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .confidence-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.3s ease-out;
+    }
+
+    .tactics-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tactic-tag {
+      color: #94a3b8;
+    }
+
+    .tactic-val {
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .danger-safe { color: #34d399; }
+    .danger-warning { color: #fbbf24; }
+    .danger-crit { color: #ef4444; font-weight: 800; animation: blink 1s infinite; }
+
+    .hud-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #64748b;
+      padding-top: 4px;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hud-card">
+    <div class="hud-header">
+      <div class="brand-title">
+        <div class="status-dot" id="status-indicator"></div>
+        SYSTEM 1 AI
+      </div>
+      <div class="model-badge" id="model-name">JEV DECISION ENGINE</div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-box">
+        <div class="metric-label">Latest Latency</div>
+        <div class="metric-value">
+          <span id="latency-val" class="latency-good">--</span>
+          <span class="metric-unit">ms</span>
+        </div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Decisions / Cost</div>
+        <div class="metric-value">
+          <span id="calls-val">0</span>
+          <span class="metric-unit" id="cost-val" style="font-size: 11px; margin-left: 4px; color: #94a3b8;">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="decision-section">
+      <div class="section-title">
+        <span>Active Decision</span>
+        <span id="action-badge" style="color: #38bdf8;">--</span>
+      </div>
+      <div class="move-row">
+        <div class="move-name" id="selected-move">Awaiting Input...</div>
+        <div class="confidence-pct" id="confidence-val">--%</div>
+      </div>
+      <div class="confidence-bar-bg">
+        <div class="confidence-bar-fill" id="confidence-bar"></div>
+      </div>
+      <div class="tactics-row">
+        <div>
+          <span class="tactic-tag">Should Heal: </span>
+          <span class="tactic-val" id="heal-val">--</span>
+        </div>
+        <div>
+          <span class="tactic-tag">Danger: </span>
+          <span class="tactic-val" id="danger-val">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-footer">
+      <span>TYPE: FAST-TWITCH PROBABILISTIC</span>
+      <span id="last-updated">LIVE</span>
+    </div>
+  </div>
+
+  <script>
+    const OVERLAY_DATA_URL = "../hud_overlay.json";
+
+    async function updateHUD() {
+      try {
+        const res = await fetch(OVERLAY_DATA_URL + "?nocache=" + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Model
+        document.getElementById("model-name").textContent = data.model || "JEV SYSTEM 1";
+
+        // Latency
+        const lat = data.latest_latency_ms || 0;
+        const latEl = document.getElementById("latency-val");
+        latEl.textContent = lat.toFixed(0);
+        latEl.className = lat < 100 ? "latency-good" : (lat < 250 ? "latency-med" : "latency-high");
+
+        // Calls & Cost
+        document.getElementById("calls-val").textContent = data.total_calls || 0;
+        document.getElementById("cost-val").textContent = data.cost_usd || "$0.00";
+
+        // Decisions
+        const dec = data.latest_decisions || {};
+        const action = dec.battle_action?.value || "EXPLORE";
+        document.getElementById("action-badge").textContent = action.toUpperCase();
+
+        const move = dec.selected_move?.value || "--";
+        document.getElementById("selected-move").textContent = move;
+
+        const conf = (dec.selected_move?.confidence ?? data.latest_confidence ?? 1.0) * (data.latest_confidence > 1 ? 1 : 100);
+        const confNum = Math.min(100, Math.max(0, conf));
+        document.getElementById("confidence-val").textContent = confNum.toFixed(1) + "%";
+        document.getElementById("confidence-bar").style.width = confNum + "%";
+
+        // Heal
+        const shouldHeal = dec.should_heal?.value;
+        const healEl = document.getElementById("heal-val");
+        if (typeof shouldHeal === "boolean") {
+          healEl.textContent = shouldHeal ? "YES (HEAL)" : "NO";
+          healEl.style.color = shouldHeal ? "#38bdf8" : "#94a3b8";
+        } else {
+          healEl.textContent = "--";
+        }
+
+        // Danger
+        const danger = dec.wipe_risk?.value ?? 0;
+        const dangerEl = document.getElementById("danger-val");
+        if (danger >= 3) {
+          dangerEl.textContent = "CRITICAL";
+          dangerEl.className = "tactic-val danger-crit";
+        } else if (danger >= 2) {
+          dangerEl.textContent = "ELEVATED";
+          dangerEl.className = "tactic-val danger-warning";
+        } else {
+          dangerEl.textContent = "SAFE";
+          dangerEl.className = "tactic-val danger-safe";
+        }
+
+      } catch (err) {
+        // Overlay file might not exist yet before first run
+      }
+    }
+
+    // Refresh every 250ms for smooth live updates
+    setInterval(updateHUD, 250);
+    updateHUD();
+  </script>
+</body>
+</html>

@@ -98,51 +98,40 @@ Place your legally obtained **`PokemonRed.gb`** ROM in the root directory (or sp
 
 ## 🕹️ Running the Bot
 
-### Offline Mock Mode (Zero API Cost)
+### 1. Local AI Mode (LiteLLM Surrogate - Real AI While on Jev Waitlist)
+Run with your local LiteLLM proxy (e.g. `deepseek-flash-nothink` or `cerebras-qwen3.8`):
+
+```bash
+python -m jev_plays.main --game pokemon_red --backend litellm --surrogate-model deepseek-flash-nothink --speed 1
+```
+
+### 2. Live TypeSafe Jev Mode (Once Waitlist Key Arrives)
+```bash
+export TYPESAFE_API_KEY="your-key-here"
+python -m jev_plays.main --game pokemon_red --backend jev --speed 0
+```
+
+### 3. Offline Mock Mode (Zero API Cost / Testing)
 Test the emulator, memory reading, and state transitions locally without spending any API credits:
 
 ```bash
 python -m jev_plays.main --game pokemon_red --mock-jev --speed 0
 ```
 
-### High-Speed Headless Run (Uncapped Emulation)
-Run at maximum CPU speed (10x–50x speed) without opening an SDL2 window:
-
-```bash
-python -m jev_plays.main --game pokemon_red --headless --speed 0
-```
-
-### Visual 60 FPS Run (For Recording & Streaming)
-Run at standard Game Boy speed (1x) with an on-screen window for OBS capture:
-
-```bash
-python -m jev_plays.main --game pokemon_red --speed 1
-```
-
 ---
 
-## 📊 Live HUD & Stream Telemetry
+## 📺 OBS Browser Source HUD Overlay
 
-`jev-plays` automatically writes real-time decision telemetry to `hud_overlay.json` on every tick:
+A cyber-styled, transparent HUD overlay is included in `overlay/index.html`.
 
-```json
-{
-  "model": "TypeSafe Jev (System 1)",
-  "total_calls": 412,
-  "latest_latency_ms": 68.4,
-  "avg_latency_ms": 74.2,
-  "latest_confidence": 98.6,
-  "cost_usd": "$0.124",
-  "latest_decisions": {
-    "battle_action": { "type": "choice", "value": "fight", "confidence": 0.99 },
-    "selected_move": { "type": "choice", "value": "Flamethrower", "confidence": 0.98 },
-    "should_heal": { "type": "noul", "value": false },
-    "wipe_risk": { "type": "score", "value": 0, "confidence": 0.95 }
-  }
-}
-```
+### How to use with OBS Studio:
+1. In OBS, click **+ (Add Source)** -> **Browser Source**.
+2. Check **Local file** and browse to `overlay/index.html` in this repo:
+   `file:///Users/anthonyumeh/Development/GitHub/jev-plays/overlay/index.html`
+3. Set Width: `1920`, Height: `1080` (or size to your canvas).
+4. Place the Game Boy gameplay on the left/center and position the HUD card wherever you like!
+5. The HUD automatically refreshes every 250ms reading `hud_overlay.json` with animated latency gauges and confidence meters.
 
-This file can be pointed to by an OBS Browser Source or HTML overlay to render a cyberpunk / esports-style AI Brain HUD in your YouTube video!
 
 ---
 

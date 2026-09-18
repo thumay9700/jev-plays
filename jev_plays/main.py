@@ -59,6 +59,25 @@ def parse_args():
         help="Use local mock System One engine (no API key needed, zero API cost).",
     )
     parser.add_argument(
+        "--backend",
+        type=str,
+        default=os.environ.get("JEV_BACKEND", "auto"),
+        choices=["auto", "jev", "litellm", "mock"],
+        help="Inference backend: 'jev' (TypeSafe AI), 'litellm' (local surrogate model), 'mock' (offline), or 'auto' (default).",
+    )
+    parser.add_argument(
+        "--surrogate-model",
+        type=str,
+        default=os.environ.get("SURROGATE_MODEL", "deepseek-flash-nothink"),
+        help="Model name when using LiteLLM surrogate backend (default: deepseek-flash-nothink).",
+    )
+    parser.add_argument(
+        "--litellm-base",
+        type=str,
+        default=os.environ.get("LITELLM_API_BASE", "http://localhost:4000"),
+        help="Base URL for LiteLLM surrogate endpoint (default: http://localhost:4000).",
+    )
+    parser.add_argument(
         "--overlay-output",
         type=str,
         default="hud_overlay.json",
@@ -134,9 +153,20 @@ def run_pokemon_red(args, telemetry: TelemetryTracker, client: JevDecisionClient
 def main():
     args = parse_args()
     telemetry = TelemetryTracker(overlay_file=args.overlay_output)
+
+    backend = args.backend
+    if args.mock_jev or backend == "mock":
+        selected_backend = "mock"
+    elif backend == "auto":
+        selected_backend = "jev" if os.environ.get("TYPESAFE_API_KEY") else "litellm"
+    else:
+        selected_backend = backend
+
     client = JevDecisionClient(
         telemetry=telemetry,
-        mock_mode=args.mock_jev,
+        backend=selected_backend,
+        llm_api_base=args.litellm_base,
+        llm_model=args.surrogate_model,
     )
 
     if args.game == "pokemon_red":
